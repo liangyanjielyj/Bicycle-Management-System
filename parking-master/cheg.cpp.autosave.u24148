@@ -1,0 +1,75 @@
+#include "cheg.h"
+#include "ui_cheg.h"
+#include "database.h"
+#include <QThread>
+#include <QTime>
+#include <QSqlQuery>
+cheg::cheg(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::cheg)
+{
+    ui->setupUi(this);
+   // while(1){
+        //  this->sleep(1000);
+   //}
+    show();
+}
+
+
+void cheg::sleep(unsigned int msec){
+    QTime dieTime = QTime::currentTime().addMSecs(msec);
+    while (QTime::currentTime() < dieTime) {
+       QCoreApplication::processEvents(QEventLoop::AllEvents,100);
+    }
+}
+
+void cheg::show(){
+    QSqlQuery query;
+        query.exec("select * from spaces");
+        while (query.next()) {
+           // int id = query.value(0).toInt();
+            QString firstname = query.value(1).toString();
+            QString password = query.value(2).toString();
+            QString time = query.value(3).toString();
+            QString msg = QString("姓名: %1 车号：%2 用车时间：%3")
+                .arg(firstname).arg(password).arg(time);
+            ui->textEdit->append(msg);
+        }
+}
+
+void cheg::rfreshtab(){
+    ui->textEdit->clear();
+    show();
+}
+
+cheg::~cheg()
+{
+    delete ui;
+}
+
+void cheg::on_pushButton_clicked()
+{
+
+}
+
+void cheg::on_pushButton_2_clicked()
+{
+    QSqlQuery qry;
+    QString nam = ui->lineEdit->text();
+    QString sql = "DELETE FROM `car_pos` WHERE `username` = '"+nam+"'";
+    qry.prepare(sql);
+    if( !qry.exec() ){
+        qDebug() << qry.lastError();
+    }else{
+        //this->close();
+        if(qry.first()){
+            QString msg = qry.value(7).toString();
+            if(msg == nam){
+                QMessageBox msgBox;
+                msgBox.setText("已删除用户");
+                msgBox.exec();
+            }
+        }
+
+    }
+}
